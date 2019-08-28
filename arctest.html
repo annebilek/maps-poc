@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>ArcGIS</title>
+    <style>
+      html, body, #viewDiv {
+        padding: 0;
+        margin: 0;
+        height: 100%;
+        width: 100%;
+      }
+      #titleDiv {
+        z-index: 99;
+        position: absolute;
+        left: 50%;
+        top: 10px;
+      }
+    </style>
+    <link rel="stylesheet" href="https://js.arcgis.com/4.11/esri/themes/light/main.css">
+    <script src="https://js.arcgis.com/4.11/"></script>
+    <script>
+      require([
+        "esri/Map",
+        "esri/views/MapView",
+        "esri/Graphic",
+        "esri/layers/GeoJSONLayer",
+      ], function(Map, MapView, Graphic, GeoJSONLayer) {
+
+        const geojsonLayer = new GeoJSONLayer({
+          url: 'https://api.myjson.com/bins/11e6lz'
+        });
+
+        var map = new Map({
+          basemap: "topo-vector",
+          layers: [geojsonLayer]
+        });
+
+        var view = new MapView({
+          container: "viewDiv",
+          map: map,
+          center: [174.773853, -36.864596], // longitude, latitude
+          zoom: 11
+        });
+
+        var point = {
+          type: "point",
+          longitude: 174.773853,
+          latitude: -36.864596
+        };
+
+        var simpleMarkerSymbol = {
+          type: "simple-marker",
+          color: [226, 119, 40],  // orange
+          outline: {
+            color: [255, 255, 255], // white
+            width: 1
+          }
+        };
+
+        var pointGraphic = new Graphic({
+          geometry: point,
+          symbol: simpleMarkerSymbol
+        });
+
+        view.graphics.add(pointGraphic);
+        view
+          .when()
+          .then(function() {
+            return geojsonLayer.when();
+          })
+          .then(function(layer) {
+            const renderer = layer.renderer.clone();
+            renderer.symbol.width = 4;
+            layer.renderer = renderer;
+
+            return view.whenLayerView(layer);
+          })
+          .then(function(layerView) {
+            view.on("pointer-move", eventHandler);
+
+            function eventHandler(event) {
+              view.hitTest(event).then();
+            }
+          });
+    });
+  </script>
+  </head>
+  <body>
+    <div id="viewDiv"></div>
+    <div id="titleDiv"><h1>ArcGIS</h1></div>
+  </body>
+</html>
