@@ -87,17 +87,14 @@
 
           if (e.features.length > 0) {
             var currentFeature = e.features[0];
-            var coords = currentFeature.geometry.coordinates[0][0];
-            var info = currentFeature.properties;
             if (hoveredStateId) {
               map.setFeatureState({ source: 'outages', id: hoveredStateId }, { hover: false });
             }
             hoveredStateId = currentFeature.id;
             map.setFeatureState({ source: 'outages', id: hoveredStateId }, { hover: true });
-            popup.setLngLat(coords)
-              .setHTML("<div><b>Feeder Name</b>: " + info.Name + "<br/><b>Outage Id</b>: " + 
-            info.outageId + "<br/><b>Resolution</b>: " + info.resolution + 
-            "<br/><b>More Info</b>: " + info.description + "<br/></div>")
+            popup
+              .setLngLat(e.lngLat)
+              .setHTML(formatPopupInfo(currentFeature.properties))
               .addTo(map);
           }
         });
@@ -119,6 +116,12 @@
           }
         })
       });
+
+      function formatPopupInfo(info) {
+        return "<div><b>Feeder Name</b>: " + info.Name + "<br/><b>Outage Id</b>: " + 
+          info.outageId + "<br/><b>Resolution</b>: " + info.resolution + 
+          "<br/><b>More Info</b>: " + info.description + "<br/></div>";
+      }
     </script>
 
   </body>
