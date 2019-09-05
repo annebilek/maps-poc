@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>Google Maps</title>
+    
+    <script>
+      let map, infowindow;
+      function initMap() {
+        map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 16, 
+          minZoom: 14,
+          maxZoom: 18,
+          center: { lat: -36.864596, lng: 174.773853 },
+          mapTypeControl: false,
+          streetViewControl: false,
+          styles: [
+            {
+              featureType: 'administrative.land_parcel',
+              stylers: [{ visibility: 'off' }],
+            },
+            {
+              featureType: 'poi',
+              stylers: [{ visibility: 'off' }],
+            }
+          ]
+        });
+        var marker = new google.maps.Marker({
+          position: { lat: -36.864596, lng: 174.773853 },
+          map: map,
+          title: 'Vector',
+        });
+        // example.json served by http://myjson.com
+        map.data.loadGeoJson('https://api.myjson.com/bins/a18ib');
+        map.data.setStyle(function(feature) {
+          var color = 'orange';
+          return /** @type {!google.maps.Data.StyleOptions} */({
+            fillColor: color,
+            strokeColor: color,
+            strokeWeight: 2
+          });
+        });
+
+        map.data.addListener('mouseover', function(event) {
+          map.data.revertStyle();
+          map.data.overrideStyle(event.feature, {
+            fillColor: 'darkorange',
+            strokeWeight: 8
+          });
+          infowindow = showInfo(event.feature.h);
+          infowindow.setPosition(event.latLng);
+          infowindow.open(map);
+        });
+
+        map.data.addListener('mouseout', function(event) {
+          map.data.revertStyle();
+          infowindow.close();
+        });
+      }
+
+      function showInfo(info) {
+        function formatContent() {
+          return "<div><b>Feeder Name</b>: " + info.Name + "<br/><b>Outage Id</b>: " + 
+            info.outageId + "<br/><b>Resolution</b>: " + info.resolution + 
+            "<br/><b>More Info</b>: " + info.description + "<br/></div>";
+        }
+        var iw = new google.maps.InfoWindow();
+        iw.setContent(formatContent(info));
+        return iw;
+      }
+    </script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCVCfZLKvWDQxC71lijUxf4qscLIwBVors&callback=initMap" type="text/javascript"></script>
+
+    <style>
+      #map {
+        height: 99vh;
+        width: 100%;
+      }
+      #titleDiv {
+        z-index: 99;
+        position: absolute;
+        left: 50%;
+        top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <div id="titleDiv"><h1>Google Maps</h1></div>
+  </body>
+</html>
