@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+    <title>MapBox</title>
+    
+    <script src="https://api.mapbox.com/mapbox-gl-js/v1.2.0/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v1.2.0/mapbox-gl.css" rel="stylesheet" />
+    <style>
+      #map {
+        height: 99vh;
+        width: 100%;
+      }
+      #titleDiv {
+        z-index: 99;
+        position: absolute;
+        left: 50%;
+        top: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+    <div id="titleDiv"><h1>MapBox</h1></div>
+    <script>
+      mapboxgl.accessToken = 'pk.eyJ1IjoiYW5uZWJpbGVrIiwiYSI6ImNqem43dmVvbjAxZDczcG1rZ3c0c3hmcWQifQ.CzjlKBPF5_wWgSyUPkM0WQ';
+      var map = new mapboxgl.Map({
+        container: 'map',
+        style: 'mapbox://styles/mapbox/streets-v8',
+        center: { lat: -36.864596, lng: 174.773853 },
+        minZoom: 14,
+        maxZoom: 18,
+        zoom: 16
+      });
+
+
+      var marker = new mapboxgl.Marker()
+        .setLngLat({ lat: -36.864596, lng: 174.773853 })
+        .addTo(map);
+
+      map.on('load', function() {
+        map.addSource('outages', {
+          type: 'geojson',
+          data: 'https://annebilek.github.io/maps-poc/example.json'
+        });
+
+        map.addLayer({
+          id: 'outage-areas',
+          type: 'fill',
+          source: 'outages',
+          paint: {
+            'fill-color': 'orange',
+            'fill-opacity': [
+              'case',
+              ['boolean', ['feature-state', 'hover'], false],
+              0.6,
+              0.4
+            ]
+          }
+        });
+        
+        map.addLayer({
+          id: 'outage-boundaries',
+          type: 'line',
+          source: 'outages',
+          layout: {},
+          paint: {
+            'line-color': 'orange',
+            'line-width': [
+              'case',
+              ['boolean', ['feature-state', 'hover'], false],
+              8,
+              2
+            ]
+          }
+        });
+
+        var popup = new mapboxgl.Popup({
+          closeButton: false,
+          closeOnClick: false
+        });
+
+        var hoveredStateId;
+        map.on("mousemove", "outage-areas", function(e) {
+          map.getCanvas().style.cursor = 'pointer';
+
+          if (e.features.length > 0) {
+            var currentFeature = e.features[0];
+            var coords = currentFeature.geometry.coordinates[0][0];
+            var info = currentFeature.properties;
+            if (hoveredStateId) {
+              map.setFeatureState({ source: 'outages', id: hoveredStateId }, { hover: false });
+            }
+            hoveredStateId = currentFeature.id;
+            map.setFeatureState({ source: 'outages', id: hoveredStateId }, { hover: true });
+            popup.setLngLat(coords)
+              .setHTML("<div><b>Feeder Name</b>: " + info.Name + "<br/><b>Outage Id</b>: " + 
+            info.outageId + "<br/><b>Resolution</b>: " + info.resolution + 
+            "<br/><b>More Info</b>: " + info.description + "<br/></div>")
+              .addTo(map);
+          }
+        });
+
+        map.on("mouseleave", "outage-areas", function() {
+          map.getCanvas().style.cursor = '';
+          popup.remove();
+          if (hoveredStateId) {
+            map.setFeatureState({ source: 'outages', id: hoveredStateId }, { hover: false});
+          }
+          hoveredStateId =  null;
+        });
+
+        // hides street addresses and points of interest
+        map.setLayoutProperty('housenum-label', 'visibility', 'none');
+        map.getStyle().layers.forEach((layer) => {
+          if (layer.id.indexOf("poi") > -1) {
+            map.setLayoutProperty(layer.id, 'visibility', 'none');
+          }
+        })
+      });
+    </script>
+
+  </body>
+</html>

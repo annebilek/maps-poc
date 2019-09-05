@@ -31,8 +31,8 @@
           map: map,
           title: 'Vector',
         });
-        // example.json served by http://myjson.com
-        map.data.loadGeoJson('https://api.myjson.com/bins/a18ib');
+        // example.json served by github pages
+        map.data.loadGeoJson('https://annebilek.github.io/maps-poc/example.json');
         map.data.setStyle(function(feature) {
           var color = 'orange';
           return /** @type {!google.maps.Data.StyleOptions} */({
